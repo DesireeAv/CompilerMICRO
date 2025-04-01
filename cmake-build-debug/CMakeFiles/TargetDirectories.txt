@@ -1,0 +1,3 @@
+/home/desiree/Documents/TEC/compiladores/micro/cmake-build-debug/CMakeFiles/micro.dir
+/home/desiree/Documents/TEC/compiladores/micro/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/desiree/Documents/TEC/compiladores/micro/cmake-build-debug/CMakeFiles/rebuild_cache.dir

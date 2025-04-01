@@ -1,0 +1,13 @@
+begin;
+x = 66 - y + 3 - 8 + 10;
+write x;
+_ comentario2222
+y = 1;
+u =  x - 19; _ comentario
+x = x - 9;
+gejhrig = x + 2;
+write y;
+y = 0;
+
+read o;
+end;
