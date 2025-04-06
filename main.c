@@ -10,7 +10,7 @@
 
 // Definición de los tipos de tokens
 enum TokenType {
-    T_BEGIN, T_END, T_READ, T_WRITE, T_IDENTIFIER, T_INTEGER, T_ASSIGN, T_SEMICOLON, T_PLUS, T_COMMENT, T_UNKNOWN
+    T_BEGIN, T_END, T_READ, T_WRITE, T_IDENTIFIER, T_INTEGER, T_ASSIGN, T_SEMICOLON, T_PLUS, T_MINUS, T_UNKNOWN
 };
 
 struct Token {
@@ -35,17 +35,22 @@ void next_char() {
 }
 
 void skip_comment() {
-    while (current_char() != '\n' && current_char() != '\0') {
+    if (current_char() == '-') {
+        while (current_char() != '\n' && current_char() != '\0') {
             next_char();
+        }
     }
 }
 
 void skip_whitespace() {
-    while (isspace(current_char())){
-        next_char();
+    while (isspace(current_char()) || current_char() == '-') {
+        if (current_char() == '-') {
+            skip_comment();  // Ignorar el comentario completo
+        } else {
+            next_char();
+        }
     }
 }
-
 
 void error(const char *message) {
     fprintf(stderr, "Error: %s\n", message);
@@ -90,15 +95,18 @@ struct Token next_token() {
     struct Token token;
     token.type = T_UNKNOWN;
 
-    char c = current_char();
+    const char c = current_char();
     if (c == '\0') return token; // CREO QUE AQUI HAY QUE CAMBIARLO POR LO DEL CAMBIO DE LINEA
 
     if (isalpha(c)) token = scan_identifier();
-    else if (isdigit(c)) token = scan_integer();
+    else if (isdigit(c)) {
+        token = scan_integer();
+        //if (token < 0) error("No se permiten restas ni números negativos.");
+    }
     else if (c == '=') { token.type = T_ASSIGN; strcpy(token.value, "="); next_char(); }
     else if (c == ';') { token.type = T_SEMICOLON; strcpy(token.value, ";"); next_char(); }
     else if (c == '+') { token.type = T_PLUS; strcpy(token.value, "+"); next_char(); }
-    else if (c == '-') { token.type = T_COMMENT; strcpy(token.value, "-"); next_char(); }
+    else if (c == '-') { skip_comment(); }
     else { next_char(); }
 
     //printf("Token leído: Tipo=%d, Valor='%s'\n", token.type, token.value); // Debug
@@ -128,14 +136,12 @@ int evaluate_expression() {
         // Acceder a la variable y asignar el valor
         result = variables[current_token.value[0] - 'a'];
         next_token_from_scanner(); // Avanzar al siguiente token
-    } else if (current_token.type == T_COMMENT) {
-        error("Se esperaba ';'.");
     } else {
         error("Se esperaba un número entero o un identificador.");
     }
 
     // Evaluar el resto de la expresión
-    while (current_token.type == T_PLUS) {
+    while (current_token.type == T_PLUS || current_token.type == T_MINUS) {
         char op = current_token.value[0];
         next_token_from_scanner(); // Avanzar al siguiente token
 
@@ -150,12 +156,12 @@ int evaluate_expression() {
         } else if (current_token.type == T_IDENTIFIER) {
             rhs = variables[current_token.value[0] - 'a'];
             next_token_from_scanner(); // Avanzar al siguiente token
-        } else if (current_token.type == T_COMMENT) {
-            error("Se esperaba ';'.");
         } else {
             error("Se esperaba un número entero o un identificador.");
         }
+        if (result < 0) error("No se permiten números negativos ni restas.");
         result += rhs;
+
     }
     return result;
 }
@@ -172,7 +178,7 @@ void parse_assign() {
 
     int value = evaluate_expression();  // Evaluar la expresión
     variables[identifier[0] - 'a'] = value;  // Asignar el valor
-
+    if (value < 0 ) error("No se permiten restas ni números  negativos.");
     printf("Asignación: %s = %d\n", identifier, value);
 
     if (current_token.type != T_SEMICOLON) error("Se esperaba ';'.");
@@ -180,7 +186,6 @@ void parse_assign() {
 }
 
 // Análisis de las operaciones de entrada/salida
-
 /*void parse_io_operation() {
     if (current_token.type != T_READ && current_token.type != T_WRITE)
         error("Se esperaba 'read' o 'write'.");
@@ -222,10 +227,11 @@ void parse_io_operation() {
         if (scanf("%d", &value) != 1) { // TODO: ESTA MAL PORQUE HAY QUE HACERLO EN NASAM
             error("Entrada inválida.");
         }
+        if (value < 0) error("No se permiten números negativos ni restas.");
         // Asignamos el valor a la variable correspondiente
         variables[identifier[0] - 'a'] = value;
     }
-        // Si la operación es "write", imprimimos el valor de la variable
+    // Si la operación es "write", imprimimos el valor de la variable
     else if (strcmp(operation, "write") == 0) {
         // Imprimimos el valor de la variable
         printf("%s = %d\n", identifier, variables[identifier[0] - 'a']);
@@ -238,10 +244,10 @@ void parse_io_operation() {
     next_token_from_scanner();  // Avanzamos al siguiente token (punto y coma)
 }
 
+
 void parse_statement() {
     if (current_token.type == T_IDENTIFIER) parse_assign();
     else if (current_token.type == T_READ || current_token.type == T_WRITE) parse_io_operation();
-    else if (current_token.type == T_COMMENT) skip_comment();
     else error("Instrucción no válida.");
 }
 
