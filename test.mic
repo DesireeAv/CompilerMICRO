@@ -1,13 +1,11 @@
 begin;
-x = 66 - y + 3 - 8 + 10;
-write x;
-_ comentario2222
-y = 1;
-u =  x - 19; _ comentario
-x = x - 9;
+x = 66 + y + 3 + 8 + 10;
+write x; - comentario2222
+Yy = 1;
+u =  x + 19; - comentario
+x = -x + -9;
 gejhrig = x + 2;
-write y;
-y = 0;
-
+write Yy;
+Yy = 0;
 read o;
 end;

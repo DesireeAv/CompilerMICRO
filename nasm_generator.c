@@ -27,9 +27,9 @@ void read_nasm(FILE *file, const char *variable_name) {
          "    ; Leer número desde la entrada estándar\n"
      "    mov eax, 3          ; sys_read\n"
      "    mov ebx, 0          ; stdin\n"
-     "    mov ecx, %s        ; dirección del buffer\n"
+     "    mov ecx, %s         ; dirección del buffer\n"
      "    mov edx, 10         ; número máximo de bytes\n"
-     "    int 0x80           ; llamada al sistema\n\n", variable_name);
+     "    int 0x80            ; llamada al sistema\n\n", variable_name);
 }
 
 /* Esta función escribe en otro archivo el código de NASM para terminar el programa, uso de syscall */
