@@ -25,7 +25,7 @@ struct trie {
 };
 
 /*--Create new trie node--*/
-inline int trie_new (struct trie ** trie){
+ int trie_new (struct trie ** trie){
     *trie = calloc(1, sizeof(struct trie));
     if (NULL == *trie) {
         // memory allocation failed
@@ -35,7 +35,7 @@ inline int trie_new (struct trie ** trie){
 }
 
 /*--Insert new word to Trie--*/
-inline int trie_insert (struct trie * trie, char *word, unsigned word_len) {
+ int trie_insert (struct trie * trie, char *word, unsigned word_len) {
     int ret = 0;
 
     // this is the end of this word; add an end-of-word marker here and we're
@@ -77,7 +77,7 @@ inline int trie_insert (struct trie * trie, char *word, unsigned word_len) {
 
 
 /*--Search a word in the Trie--*/
-inline int trie_search(struct trie * trie, char *word, unsigned word_len, struct trie ** result) {
+ int trie_search(struct trie * trie, char *word, unsigned word_len, struct trie ** result) {
     // we found a match
     if (0 == word_len) {
         *result = trie;

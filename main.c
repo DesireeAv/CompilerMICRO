@@ -4,6 +4,10 @@
 #include <errno.h>  // Para manejar errores de conversión
 #include <ctype.h>
 
+#include "main.h"
+struct trie * rootTrie = NULL;
+struct trie * trieTail = NULL;
+
 #define MAX_TOKEN_LENGTH 32
 #define MAX_LINE 256
 #define MAX_TOKENS 100
@@ -125,6 +129,8 @@ int evaluate_expression() {
     int result = 0;
     char *endptr;
 
+
+
     if (current_token.type == T_INTEGER) {
         // Usar strtol para convertir la cadena a un número entero
         result = strtol(current_token.value, &endptr, 10);
@@ -134,6 +140,12 @@ int evaluate_expression() {
         next_token_from_scanner(); // Avanzar al siguiente token
     } else if (current_token.type == T_IDENTIFIER) {
         // Acceder a la variable y asignar el valor
+        char identifier[MAX_TOKEN_LENGTH];
+        strcpy(identifier, current_token.value);
+
+        if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+            error("Variable no declarada previamente;");
+        }
         result = variables[current_token.value[0] - 'a'];
         next_token_from_scanner(); // Avanzar al siguiente token
     } else {
@@ -154,6 +166,11 @@ int evaluate_expression() {
             }
             next_token_from_scanner(); // Avanzar al siguiente token
         } else if (current_token.type == T_IDENTIFIER) {
+            char identifier[MAX_TOKEN_LENGTH];
+            strcpy(identifier, current_token.value);
+            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+                error("Variable no declarada previamente;");
+            }
             rhs = variables[current_token.value[0] - 'a'];
             next_token_from_scanner(); // Avanzar al siguiente token
         } else {
@@ -168,9 +185,18 @@ int evaluate_expression() {
 
 // Análisis de asignaciones
 void parse_assign() {
+    int temp = 0;
     if (current_token.type != T_IDENTIFIER) error("Se esperaba un identificador.");
+
     char identifier[MAX_TOKEN_LENGTH];
     strcpy(identifier, current_token.value);
+
+    if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+        temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
+        if (temp == -1) {
+            error("Could not insert variable into trie");
+        }
+    }
     next_token_from_scanner();
 
     if (current_token.type != T_ASSIGN) error("Se esperaba '='.");
@@ -283,6 +309,12 @@ int main(const int argc, char **argv) {
     if (!input) {
         perror("Error al abrir el archivo");
         return EXIT_FAILURE;
+    }
+
+    int ret = 0;
+    ret = trie_new(&rootTrie);
+    if (-1 == ret) {
+        error( "Could not create trie\n");
     }
 
     fseek(input, 0, SEEK_END);

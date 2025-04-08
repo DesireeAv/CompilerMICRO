@@ -41,6 +41,8 @@ void end_nasm(FILE *file) {
         "    syscall             ; Trigger the system call\n");
 }
 
+
+
 /* Esta función debe tener los nombres de todas las variables que van a haber en el código, o bien, la función que tiene todas las variables tiene que llamar a la función
  * write_bss y también a la de inicio y luego a las de ejecución (las correspondientes de read, write, asignación, suma, resta, Y TAMBIÉN: begin y end)*/
 void generate_nasm_code(const char *variable_name) {
