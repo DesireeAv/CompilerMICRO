@@ -18,3 +18,4 @@
 ## Especificaciones del compilador:
 - Utiliza la estructura de datos trie para almacenar las variables (falta de implementar)
 - Maneja errores 
+- En las asignaciones no se pueden hacer variables nuevas 
