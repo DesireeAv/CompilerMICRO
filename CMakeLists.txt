@@ -4,7 +4,7 @@ project(micro C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(micro
-        #main.c
-        #main.h
-        test_abrir_asm.c
+        main.c
+        main.h
+        #test_abrir_asm.c
 )

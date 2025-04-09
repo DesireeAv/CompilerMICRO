@@ -153,7 +153,8 @@ void trie_bss(struct trie *variableTrie, char prefix[], unsigned prefix_len, FIL
          trie_bss(variableTrie->children[i], prefix, prefix_len + 1, file);
      }
  }
-
+//  TODO: HACER EL SEGMENT .BSS EN LUGAR DEL SEGMENT .BSS (POR ALGUNA RAZON EL OTRO NO FUNCIONA BIEN)
+/*
 void generate_nasm_code(struct trie *variableTrie) {
      FILE *file = fopen("test.asm", "w");
      if (!file) {
@@ -166,4 +167,4 @@ void generate_nasm_code(struct trie *variableTrie) {
      trie_bss(variableTrie, prefix, 0, file);
      fclose(file);
      printf("Archivo test.asm generado con éxito.\n");
- }
+ }*/

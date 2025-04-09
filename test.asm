@@ -1,12 +1,7 @@
 section .data
-    prompt_x db "Enter x: ", 0
-    len_x equ $ - prompt_x
+    prompt db "Enter variable: ", 0
+    len equ $ - prompt
 
-    prompt_y db "Enter y: ", 0
-    len_y equ $ - prompt_y
-
-    prompt_z db "Enter z: ", 0
-    len_z equ $ - prompt_z
 
     buffer times 20 db 0
 
@@ -22,8 +17,8 @@ _start:
     ; Leer x
     mov eax, 4             ; sys_write
     mov ebx, 1             ; stdout
-    mov ecx, prompt_x
-    mov edx, len_x
+    mov ecx, prompt
+    mov edx, len
     int 0x80
 
     call read_input
@@ -32,7 +27,7 @@ _start:
     ; Leer y
     mov eax, 4
     mov ebx, 1
-    mov ecx, prompt_y
+    mov ecx, prompt
     mov edx, len_y
     int 0x80
 
@@ -42,7 +37,7 @@ _start:
     ; Leer z
     mov eax, 4
     mov ebx, 1
-    mov ecx, prompt_z
+    mov ecx, prompt
     mov edx, len_z
     int 0x80
 
@@ -53,6 +48,7 @@ _start:
     mov eax, [x]
     add eax, [y]
     add eax, [z]
+    mov [x], eax
 
     ; Salida (podrías mostrar el resultado aquí)
     mov eax, 1             ; sys_exit

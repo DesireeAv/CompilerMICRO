@@ -125,30 +125,18 @@ void next_token_from_scanner() {
 
 
 // Función para evaluar expresiones aritméticas
-int evaluate_expression() {
-    int result = 0;
-    char *endptr;
-
+void evaluate_expression() {
     if (current_token.type == T_INTEGER) {
-        // Usar strtol para convertir la cadena a un número entero
-        if (SECOND_TIME == 1) {
-            result = strtol(current_token.value, &endptr, 10);
-            if (errno == ERANGE) {
-                error("Error al convertir el número.");
-            }
-        }
+        suma_entero_nasm(current_token.value);
         next_token_from_scanner(); // Avanzar al siguiente token
     } else if (current_token.type == T_IDENTIFIER) {
         // Acceder a la variable y asignar el valor
         char identifier[MAX_TOKEN_LENGTH];
         strcpy(identifier, current_token.value);
-        if (SECOND_TIME == 0) {
-            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-                error("Variable no declarada previamente;");
-            }
-        }else {
-            result = variables[current_token.value[0] - 'a'];
+        if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+            error("Variable no declarada previamente;");
         }
+        suma_variable_nasm(current_token.value);
         next_token_from_scanner(); // Avanzar al siguiente token
     } else {
         error("Se esperaba un número entero o un identificador.");
@@ -158,36 +146,22 @@ int evaluate_expression() {
     while (current_token.type == T_PLUS || current_token.type == T_MINUS) {
         char op = current_token.value[0];
         next_token_from_scanner(); // Avanzar al siguiente token
-
-        int rhs = 0;
         if (current_token.type == T_INTEGER) {
             // Usar strtol para convertir la cadena a un número entero
-            if (SECOND_TIME == 1) {
-                rhs = strtol(current_token.value, &endptr, 10);
-                if (errno == ERANGE) {
-                    error("Error al convertir el número.");
-                }
-            }
+            suma_entero_nasm(current_token.value);
             next_token_from_scanner(); // Avanzar al siguiente token
         } else if (current_token.type == T_IDENTIFIER) {
             char identifier[MAX_TOKEN_LENGTH];
             strcpy(identifier, current_token.value);
-            if (SECOND_TIME == 0) {
-                if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
                     error("Variable no declarada previamente;");
-                }
-            }else {
-                rhs = variables[current_token.value[0] - 'a'];
             }
+            suma_variable_nasm(current_token.value);
             next_token_from_scanner(); // Avanzar al siguiente token
         } else {
             error("Se esperaba un número entero o un identificador.");
         }
-        if (result < 0) error("No se permiten números negativos ni restas.");
-        result += rhs;
-
     }
-    return result;
 }
 
 // Análisis de asignaciones
@@ -203,39 +177,21 @@ void parse_assign() {
         if (temp == -1) {
             error("Could not insert variable into trie");
         }
+        // Se debe escribir la variable en el .bss
     }
     next_token_from_scanner();
 
     if (current_token.type != T_ASSIGN) error("Se esperaba '='.");
     next_token_from_scanner();
 
-    int value = evaluate_expression(); // Evaluar la expresión
-    variables[identifier[0] - 'a'] = value; // Asignar el valor
-    if (value < 0) error("No se permiten restas ni números  negativos.");
-    printf("Asignación: %s = %d\n", identifier, value);
+    iniciar_asignacion_nasm();
+    evaluate_expression(); // Evaluar la expresión
+    terminar_asignacion_nasm(identifier);
 
     if (current_token.type != T_SEMICOLON) error("Se esperaba ';'.");
     next_token_from_scanner();
 }
 
-// Análisis de las operaciones de entrada/salida
-/*void parse_io_operation() {
-    if (current_token.type != T_READ && current_token.type != T_WRITE)
-        error("Se esperaba 'read' o 'write'.");
-
-    char operation[MAX_TOKEN_LENGTH];
-    strcpy(operation, current_token.value);
-    next_token_from_scanner();
-
-    if (current_token.type != T_IDENTIFIER) error("Se esperaba un identificador después de 'read' o 'write'.");
-    printf("%s %s\n", operation, current_token.value);
-
-    next_token_from_scanner();
-
-    if (current_token.type != T_SEMICOLON) error("Se esperaba ';'.");
-    next_token_from_scanner();
-}
-*/
 void parse_io_operation() {
     if (current_token.type != T_READ && current_token.type != T_WRITE) {
         error("Se esperaba 'read' o 'write'.");
@@ -255,35 +211,22 @@ void parse_io_operation() {
 
     // Si la operación es "read", pedimos al usuario que ingrese un valor
     if (strcmp(operation, "read") == 0) {
-        if (SECOND_TIME == 0) {
-            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-                int temp = 0;
-                temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
-                if (temp == -1) {
-                    error("Could not insert variable into trie");
-                }
+        if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+            int temp = 0;
+            temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
+            if (temp == -1) {
+                error("Could not insert variable into trie");
             }
-        }else {
-            int value;
-            printf("Ingrese un valor para read %s: ", identifier);
-            if (scanf("%d", &value) != 1) { // TODO: ESTA MAL PORQUE HAY QUE HACERLO EN NASAM
-                error("Entrada inválida.");
-            }
-            if (value < 0) error("No se permiten números negativos ni restas.");
-            // Asignamos el valor a la variable correspondiente
-            variables[identifier[0] - 'a'] = value;
         }
+        read_nasm(identifier);
     }
     // Si la operación es "write", imprimimos el valor de la variable
     else if (strcmp(operation, "write") == 0) {
         // Imprimimos el valor de la variable
-        if (SECOND_TIME == 0) {
-            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-                error("Variable no declarada previamente;");
-            }
-        }else{
-            printf("%s = %d\n", identifier, variables[identifier[0] - 'a']);
+        if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+            error("Variable no declarada previamente;");
         }
+        write_nasm(identifier);
     }
 
     // Verificamos si el siguiente token es un punto y coma
@@ -358,6 +301,9 @@ int main(const int argc, char **argv) {
     parse_program();
 
     free(source_code);
+
+    //Todo lo que sigue se debe borrar
+
     SECOND_TIME = 1; // PARA QUE EL PROGRAMA SEPA QUE YA SE TIENEN QUE ESCRIBIR LAS FUNCIONES Y NO SOLO LEER LAS VARIABLES
     printf("SECOND TIME\n");
     pos = 0;
@@ -388,6 +334,5 @@ int main(const int argc, char **argv) {
     parse_program();
 
     free(source_code);
-    //generate_nasm_code(rootTrie);
     return EXIT_SUCCESS;
 }
