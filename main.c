@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>  // Para manejar errores de conversión
+#include <errno.h>
 #include <ctype.h>
 
 #include "main.h"
@@ -14,8 +14,6 @@ struct trie *trieTail = NULL;
 #define MAX_LINE 256
 #define MAX_TOKENS 100
 
-
-// Definición de los tipos de tokens
 enum TokenType {
     T_BEGIN, T_END, T_READ, T_WRITE, T_IDENTIFIER, T_INTEGER, T_ASSIGN, T_SEMICOLON, T_PLUS, T_MINUS, T_UNKNOWN
 };
@@ -28,15 +26,12 @@ struct Token {
 FILE *bssFile;
 FILE *textFile;
 
-
-// Código fuente y posición de lectura
 char *source_code;
 int pos = 0;
 
-// Variables para las variables y sus valores
-int variables[26]; // Asume que las variables son solo letras de 'a' a 'z'
+int variables[26]; // asume que las variables son solo letras de 'a' a 'z'
 
-// Funciones de manipulación del código fuente
+
 char current_char() {
     return source_code[pos];
 }
@@ -56,7 +51,7 @@ void skip_comment() {
 void skip_whitespace() {
     while (isspace(current_char()) || current_char() == '-') {
         if (current_char() == '-') {
-            skip_comment(); // Ignorar el comentario completo
+            skip_comment(); // IGNORAR EL COMENTARIO COMPLETOOOO
         } else {
             next_char();
         }
@@ -68,7 +63,7 @@ void error(const char *message) {
     exit(EXIT_FAILURE);
 }
 
-// Analizar un número entero
+/* Analiza un número entero*/
 struct Token scan_integer() {
     struct Token token;
     token.type = T_INTEGER;
@@ -81,7 +76,7 @@ struct Token scan_integer() {
     return token;
 }
 
-// Analizar identificadores y palabras clave
+/* Analiza nombres de variables y palabras clave*/
 struct Token scan_identifier() {
     struct Token token;
     int i = 0;
@@ -100,7 +95,7 @@ struct Token scan_identifier() {
     return token;
 }
 
-// Obtener el siguiente token
+/*obtener el siguiente token*/
 struct Token next_token() {
     skip_whitespace();
     struct Token token;
@@ -112,7 +107,6 @@ struct Token next_token() {
     if (isalpha(c)) token = scan_identifier();
     else if (isdigit(c)) {
         token = scan_integer();
-        //if (token < 0) error("No se permiten restas ni números negativos.");
     } else if (c == '=') {
         token.type = T_ASSIGN;
         strcpy(token.value, "=");
@@ -131,7 +125,7 @@ struct Token next_token() {
     return token;
 }
 
-// Variables para el análisis sintáctico
+/* variables para el análisis sintáctico*/
 struct Token current_token;
 
 void next_token_from_scanner() {
@@ -139,31 +133,31 @@ void next_token_from_scanner() {
 }
 
 
-// Función para evaluar expresiones aritméticas
+/*funcion para evaluar expresiones aritméticas*/
 void evaluate_expression() {
     if (current_token.type == T_INTEGER) {
         suma_entero_nasm(textFile, current_token.value);
-        next_token_from_scanner(); // Avanzar al siguiente token
+        next_token_from_scanner();
     } else if (current_token.type == T_IDENTIFIER) {
-        // Acceder a la variable y asignar el valor
+        // // accede a la variable y le asigna el valor
         char identifier[MAX_TOKEN_LENGTH];
         strcpy(identifier, current_token.value);
         if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
             error("Variable no declarada previamente;");
         }
         suma_variable_nasm(textFile, current_token.value);
-        next_token_from_scanner(); // Avanzar al siguiente token
+        next_token_from_scanner();
     } else {
         error("Se esperaba un número entero o un identificador.");
     }
 
-    // Evaluar el resto de la expresión
+    //aqui se evalua el resto de la expresión de sumas
     while (current_token.type == T_PLUS ) { // le quité el || current_token.type == T_MINUS que estaba dentro del while
         char op = current_token.value[0];
-        next_token_from_scanner(); // Avanzar al siguiente token
+        next_token_from_scanner();
         if (current_token.type == T_INTEGER) {
             suma_entero_nasm(textFile, current_token.value);
-            next_token_from_scanner(); // Avanzar al siguiente token
+            next_token_from_scanner();
         } else if (current_token.type == T_IDENTIFIER) {
             char identifier[MAX_TOKEN_LENGTH];
             strcpy(identifier, current_token.value);
@@ -171,14 +165,14 @@ void evaluate_expression() {
                 error("Variable no declarada previamente;");
             }
             suma_variable_nasm(textFile, current_token.value);
-            next_token_from_scanner(); // Avanzar al siguiente token
+            next_token_from_scanner();
         } else {
             error("Se esperaba un número entero o un identificador.");
         }
     }
 }
 
-// análisis de asignaciones
+/*análisis de asignaciones*/
 void parse_assign() {
     if (current_token.type != T_IDENTIFIER) error("Se esperaba un identificador.");
 
@@ -201,7 +195,7 @@ void parse_assign() {
     next_token_from_scanner();
 
     iniciar_asignacion_nasm(textFile);
-    evaluate_expression(); // Evaluar la expresión
+    evaluate_expression();
     terminar_asignacion_nasm(textFile, identifier);
 
     if (current_token.type != T_SEMICOLON) error("Se esperaba ';'.");
@@ -215,7 +209,7 @@ void parse_io_operation() {
 
     char operation[MAX_TOKEN_LENGTH];
     strcpy(operation, current_token.value);
-    next_token_from_scanner(); // Avanzamos al siguiente token
+    next_token_from_scanner(); // aqiu avanzamos al siguiente token
 
     if (current_token.type != T_IDENTIFIER) {
         error("Se esperaba un identificador después de 'read' o 'write'.");
@@ -223,9 +217,9 @@ void parse_io_operation() {
 
     char identifier[MAX_TOKEN_LENGTH];
     strcpy(identifier, current_token.value);
-    next_token_from_scanner(); // Avanzamos al siguiente token
+    next_token_from_scanner(); // aqui tambien avanzamos al siguiente token
 
-    // Si la operación es "read", pedimos al usuario que ingrese un valor
+    // Si la operación es "read", pedimos al user que meta un valor
     if (strcmp(operation, "read") == 0) {
         if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
             int temp = 0;
@@ -242,18 +236,18 @@ void parse_io_operation() {
     }
     // Si la operación es "write", imprimimos el valor de la variable
     else if (strcmp(operation, "write") == 0) {
-        // Imprimimos el valor de la variable
+        // se imprime el valor de la variable pero primero verificamos si está o no
         if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
             error("Variable no declarada previamente;");
         }
         write_nasm(textFile, identifier);
     }
 
-    // Verificamos si el siguiente token es un punto y coma
+    // se ve si el siguiente token es un punto y coma
     if (current_token.type != T_SEMICOLON) {
         error("Se esperaba ';' después de la operación.");
     }
-    next_token_from_scanner(); // Avanzamos al siguiente token (punto y coma)
+    next_token_from_scanner(); // vamos al siguiente punto y coma
 }
 
 void parse_statement() {
@@ -272,7 +266,6 @@ void parse_program() {
     if (current_token.type != T_BEGIN) error("Se esperaba 'begin'.");
     next_token_from_scanner();
 
-    // Omitir punto y coma después de 'begin' si está presente
     if (current_token.type == T_SEMICOLON) {
         next_token_from_scanner();
     }
@@ -285,7 +278,6 @@ void parse_program() {
     // suave solo que no va a qui, va en el main
 }
 
-// Función principal
 int main(const int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "Uso: %s <archivo.mic>\n", argv[0]);
@@ -327,12 +319,11 @@ int main(const int argc, char **argv) {
 
     end_nasm(textFile); // MAEEEEEE OMG ERA ESO JAJAJA NO LO PUSIMOS
 
-    fclose(textFile); // Flushes and closes output.text
+    fclose(textFile); // cierra y flushea el .text
 
     textFile = fopen("output.text", "r");
     if (textFile == NULL) {
-        perror("Error opening output.text for reading");
-        // Handle the error appropriately
+        perror("Error abriendo output.text.");
     }
     char line[256];
     while (fgets(line, sizeof(line), textFile)) {
@@ -351,19 +342,19 @@ int main(const int argc, char **argv) {
     // todo: y lo último, despues de que se borra el output.text se ejecuta el output.asm por medio de los comandos del archivo test_abrir_asm.c
 
     // Aqui se abre y se ejecuta el output.asm:
-    // Compilarlo
+    // compilarlo
         if(system("nasm -f elf32 output.asm -o output.o") != 0) {
             perror("Error en ensamblar el archivo de codigo nasm.");
             return 1;
         }
 
-    // Enlazarlo
-    if(system("ld -m elf_i386 output.o -o output") != 0) { //QUé hace? o qué estamos haciendo? lo unico que faltaba era lo de borrar el textFile
-        perror("Error al enlazar el archivo de codigo nasm."); // Diay probemos a ver si sirve ese remove ok ok deme dos segundos
+    // enlazarlo
+    if(system("ld -m elf_i386 output.o -o output") != 0) {
+        perror("Error al enlazar el archivo de codigo nasm.");
         return 1;
     }
 
-    // Ejecutarlo
+    // ejecutarlo
     if(system("./output") != 0) {
         perror("Error al ejecutar el archivo de codigo nasm.");
         return 1;

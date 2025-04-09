@@ -135,20 +135,3 @@ struct trie {
 }
 
 
-/*
-void trie_bss(struct trie *variableTrie, char prefix[], unsigned prefix_len, FILE *file) {
-     if (variableTrie->end_of_word) {
-         prefix[prefix_len] = '\0'; // para que sea string válida
-         assignment_bss_nasm(file, prefix);
-     }
-
-     for (int i = 0; i < ALPHABET_SIZE; i++) {
-         if (variableTrie->children[i] == NULL) {
-             continue;
-         }
-
-         prefix[prefix_len] = i + 'a';
-         trie_bss(variableTrie->children[i], prefix, prefix_len + 1, file);
-     }
- }*/
-//  TODO: HACER EL SEGMENT .BSS EN LUGAR DEL SEGMENT .BSS (POR ALGUNA RAZON EL OTRO NO FUNCIONA BIEN)

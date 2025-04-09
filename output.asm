@@ -5,6 +5,7 @@ section .data
 
 segment .bss                   ; donde vamos a declarar todas las variables
     variable resd 1
+    rurururururururururururururururu resd 1
 section .text
     global _start
 
@@ -90,6 +91,31 @@ convert_loop_2:
     mov [ecx], dl
     test eax, eax
     jnz convert_loop_2
+    ; Añadir salto de linea después del número
+    mov byte [esi], 10     ; <- Esi sigue siendo buffer+10
+    mov eax, 4             ; sys_write
+    mov ebx, 1             ; stdout
+    mov edx, esi            ; longitud máxima
+    sub edx, ecx           ; longitud = fin - inicio
+    add edx, 1             ; incluir salto de linea 
+    int 0x80
+    mov eax, 0
+    add eax, 14975
+    mov [rurururururururururururururururu], eax
+    ; Escribir la variable rurururururururururururururururu
+    mov eax, [rurururururururururururururururu]          ; Cargar valor
+    mov ecx, buffer        ; Puntero al buffer
+    add ecx, 10            ; Posicionarse al final del buffer
+    mov esi, ecx           ; Guardamos el puntero final en esi (para calcular longitud luego)
+convert_loop_3:
+    dec ecx
+    xor edx, edx
+    mov ebx, 10
+    div ebx
+    add dl, '0'
+    mov [ecx], dl
+    test eax, eax
+    jnz convert_loop_3
     ; Añadir salto de linea después del número
     mov byte [esi], 10     ; <- Esi sigue siendo buffer+10
     mov eax, 4             ; sys_write
