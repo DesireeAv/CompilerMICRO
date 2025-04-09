@@ -6,3 +6,8 @@
 #define NASM_GENERATOR_H
 
 #endif //NASM_GENERATOR_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+

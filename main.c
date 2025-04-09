@@ -11,7 +11,7 @@ struct trie * trieTail = NULL;
 #define MAX_TOKEN_LENGTH 32
 #define MAX_LINE 256
 #define MAX_TOKENS 100
-
+int SECOND_TIME = 0;
 // Definición de los tipos de tokens
 enum TokenType {
     T_BEGIN, T_END, T_READ, T_WRITE, T_IDENTIFIER, T_INTEGER, T_ASSIGN, T_SEMICOLON, T_PLUS, T_MINUS, T_UNKNOWN
@@ -129,24 +129,26 @@ int evaluate_expression() {
     int result = 0;
     char *endptr;
 
-
-
     if (current_token.type == T_INTEGER) {
         // Usar strtol para convertir la cadena a un número entero
-        result = strtol(current_token.value, &endptr, 10);
-        if (errno == ERANGE) {
-            error("Error al convertir el número.");
+        if (SECOND_TIME == 1) {
+            result = strtol(current_token.value, &endptr, 10);
+            if (errno == ERANGE) {
+                error("Error al convertir el número.");
+            }
         }
         next_token_from_scanner(); // Avanzar al siguiente token
     } else if (current_token.type == T_IDENTIFIER) {
         // Acceder a la variable y asignar el valor
         char identifier[MAX_TOKEN_LENGTH];
         strcpy(identifier, current_token.value);
-
-        if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-            error("Variable no declarada previamente;");
+        if (SECOND_TIME == 0) {
+            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+                error("Variable no declarada previamente;");
+            }
+        }else {
+            result = variables[current_token.value[0] - 'a'];
         }
-        result = variables[current_token.value[0] - 'a'];
         next_token_from_scanner(); // Avanzar al siguiente token
     } else {
         error("Se esperaba un número entero o un identificador.");
@@ -160,18 +162,23 @@ int evaluate_expression() {
         int rhs = 0;
         if (current_token.type == T_INTEGER) {
             // Usar strtol para convertir la cadena a un número entero
-            rhs = strtol(current_token.value, &endptr, 10);
-            if (errno == ERANGE) {
-                error("Error al convertir el número.");
+            if (SECOND_TIME == 1) {
+                rhs = strtol(current_token.value, &endptr, 10);
+                if (errno == ERANGE) {
+                    error("Error al convertir el número.");
+                }
             }
             next_token_from_scanner(); // Avanzar al siguiente token
         } else if (current_token.type == T_IDENTIFIER) {
             char identifier[MAX_TOKEN_LENGTH];
             strcpy(identifier, current_token.value);
-            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-                error("Variable no declarada previamente;");
+            if (SECOND_TIME == 0) {
+                if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+                    error("Variable no declarada previamente;");
+                }
+            }else {
+                rhs = variables[current_token.value[0] - 'a'];
             }
-            rhs = variables[current_token.value[0] - 'a'];
             next_token_from_scanner(); // Avanzar al siguiente token
         } else {
             error("Se esperaba un número entero o un identificador.");
@@ -185,13 +192,13 @@ int evaluate_expression() {
 
 // Análisis de asignaciones
 void parse_assign() {
-    int temp = 0;
     if (current_token.type != T_IDENTIFIER) error("Se esperaba un identificador.");
 
     char identifier[MAX_TOKEN_LENGTH];
     strcpy(identifier, current_token.value);
 
     if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+        int temp = 0;
         temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
         if (temp == -1) {
             error("Could not insert variable into trie");
@@ -202,9 +209,9 @@ void parse_assign() {
     if (current_token.type != T_ASSIGN) error("Se esperaba '='.");
     next_token_from_scanner();
 
-    int value = evaluate_expression();  // Evaluar la expresión
-    variables[identifier[0] - 'a'] = value;  // Asignar el valor
-    if (value < 0 ) error("No se permiten restas ni números  negativos.");
+    int value = evaluate_expression(); // Evaluar la expresión
+    variables[identifier[0] - 'a'] = value; // Asignar el valor
+    if (value < 0) error("No se permiten restas ni números  negativos.");
     printf("Asignación: %s = %d\n", identifier, value);
 
     if (current_token.type != T_SEMICOLON) error("Se esperaba ';'.");
@@ -248,19 +255,35 @@ void parse_io_operation() {
 
     // Si la operación es "read", pedimos al usuario que ingrese un valor
     if (strcmp(operation, "read") == 0) {
-        int value;
-        printf("Ingrese un valor para read %s: ", identifier);
-        if (scanf("%d", &value) != 1) { // TODO: ESTA MAL PORQUE HAY QUE HACERLO EN NASAM
-            error("Entrada inválida.");
+        if (SECOND_TIME == 0) {
+            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+                int temp = 0;
+                temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
+                if (temp == -1) {
+                    error("Could not insert variable into trie");
+                }
+            }
+        }else {
+            int value;
+            printf("Ingrese un valor para read %s: ", identifier);
+            if (scanf("%d", &value) != 1) { // TODO: ESTA MAL PORQUE HAY QUE HACERLO EN NASAM
+                error("Entrada inválida.");
+            }
+            if (value < 0) error("No se permiten números negativos ni restas.");
+            // Asignamos el valor a la variable correspondiente
+            variables[identifier[0] - 'a'] = value;
         }
-        if (value < 0) error("No se permiten números negativos ni restas.");
-        // Asignamos el valor a la variable correspondiente
-        variables[identifier[0] - 'a'] = value;
     }
     // Si la operación es "write", imprimimos el valor de la variable
     else if (strcmp(operation, "write") == 0) {
         // Imprimimos el valor de la variable
-        printf("%s = %d\n", identifier, variables[identifier[0] - 'a']);
+        if (SECOND_TIME == 0) {
+            if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
+                error("Variable no declarada previamente;");
+            }
+        }else{
+            printf("%s = %d\n", identifier, variables[identifier[0] - 'a']);
+        }
     }
 
     // Verificamos si el siguiente token es un punto y coma
@@ -314,7 +337,7 @@ int main(const int argc, char **argv) {
     int ret = 0;
     ret = trie_new(&rootTrie);
     if (-1 == ret) {
-        error( "Could not create trie\n");
+        error( "Could not create trie");
     }
 
     fseek(input, 0, SEEK_END);
@@ -334,13 +357,37 @@ int main(const int argc, char **argv) {
     next_token_from_scanner();
     parse_program();
 
-    // Imprimir las variables al final, si quieres ver su contenido
-    // for (int i = 0; i < 26; i++) {
-    //     if (variables[i] != 0) {
-    //         printf("%c = %d\n", 'a' + i, variables[i]);
-    //     }
-    // }
+    free(source_code);
+    SECOND_TIME = 1; // PARA QUE EL PROGRAMA SEPA QUE YA SE TIENEN QUE ESCRIBIR LAS FUNCIONES Y NO SOLO LEER LAS VARIABLES
+    printf("SECOND TIME\n");
+    pos = 0;
+
+    // Segunda lectura
+    input = fopen(argv[1], "r");
+    if (!input) {
+        perror("Error al volver a abrir el archivo");
+        return EXIT_FAILURE;
+    }
+
+    fseek(input, 0, SEEK_END);
+    length = ftell(input);
+    fseek(input, 0, SEEK_SET);
+
+    source_code = malloc(length + 1);
+    if (!source_code) {
+        perror("Error de memoria en segunda lectura");
+        fclose(input);
+        return EXIT_FAILURE;
+    }
+
+    fread(source_code, 1, length, input);
+    source_code[length] = '\0';
+    fclose(input);
+
+    next_token_from_scanner();
+    parse_program();
 
     free(source_code);
+    //generate_nasm_code(rootTrie);
     return EXIT_SUCCESS;
 }

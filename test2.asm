@@ -8,10 +8,10 @@ section .data
     prompt_z db "Enter z: ", 0
     len_z equ $ - prompt_z
 
-    buffer times 20 db 0
+    buffer times 20 db 0   ; Buffer para entrada
 
 section .bss
-    x resd 1               ; 32 bits ahora
+    x resd 1               ; Enteros de 32 bits
     y resd 1
     z resd 1
 
@@ -49,14 +49,15 @@ _start:
     call read_input
     mov [z], eax
 
-    ; Suma
+    ; Ejemplo: suma x + y + z
     mov eax, [x]
     add eax, [y]
     add eax, [z]
+    ; Resultado en eax
 
-    ; Salida (podrías mostrar el resultado aquí)
+    ; Salir
     mov eax, 1             ; sys_exit
-    mov ebx, 0
+    xor ebx, ebx
     int 0x80
 
 read_input:
@@ -72,18 +73,18 @@ read_input:
     ret
 
 convert_string_to_int:
-    xor eax, eax
+    xor eax, eax           ; Acumulador
     xor ecx, ecx           ; Índice
 
 convert_loop:
-    mov dl, [buffer + ecx]
-    cmp dl, 0xA            ; Fin de línea
+    mov dl, [buffer + ecx] ; Cargar carácter
+    cmp dl, 0xA            ; Verificar fin de línea
     je convert_done
-    sub dl, '0'
+    sub dl, '0'            ; Convertir ASCII a número
     movzx edx, dl          ; Extender a 32 bits
-    imul eax, 10
-    add eax, edx
-    inc ecx
+    imul eax, 10           ; Desplazar dígitos
+    add eax, edx           ; Agregar nuevo dígito
+    inc ecx                ; Siguiente carácter
     jmp convert_loop
 
 convert_done:

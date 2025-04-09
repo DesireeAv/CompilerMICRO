@@ -109,7 +109,7 @@ struct trie {
 }
 
 /*---Return all the related words------*/
-inline void trie_print (struct trie * trie, char prefix[], unsigned prefix_len) {
+ void trie_print (struct trie * trie, char prefix[], unsigned prefix_len) {
     // An end-of-word marker means that this is a complete word, print it.
     if (true == trie->end_of_word) {
         printf("%.*s\n", prefix_len, prefix);
@@ -133,3 +133,37 @@ inline void trie_print (struct trie * trie, char prefix[], unsigned prefix_len) 
         trie_print(trie->children[i], prefix, prefix_len + 1);
     }
 }
+
+void assignment_bss_nasm(FILE *file, const char *variable_name) {
+     fprintf(file,"    %s resb 10\n",variable_name);
+ }
+
+void trie_bss(struct trie *variableTrie, char prefix[], unsigned prefix_len, FILE *file) {
+     if (variableTrie->end_of_word) {
+         prefix[prefix_len] = '\0'; // para que sea string válida
+         assignment_bss_nasm(file, prefix);
+     }
+
+     for (int i = 0; i < ALPHABET_SIZE; i++) {
+         if (variableTrie->children[i] == NULL) {
+             continue;
+         }
+
+         prefix[prefix_len] = i + 'a';
+         trie_bss(variableTrie->children[i], prefix, prefix_len + 1, file);
+     }
+ }
+
+void generate_nasm_code(struct trie *variableTrie) {
+     FILE *file = fopen("test.asm", "w");
+     if (!file) {
+         perror("Error al crear el archivo");
+         exit(EXIT_FAILURE);
+     }
+     fprintf(file,
+             "section .bss\n");
+     char prefix[128];
+     trie_bss(variableTrie, prefix, 0, file);
+     fclose(file);
+     printf("Archivo test.asm generado con éxito.\n");
+ }

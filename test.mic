@@ -1,12 +1,7 @@
 begin;
-x = 66;
-write x; -comentario2222
-y = 1;
-u =  x + 19; -comentario
-x = 9+ x ;
-gejhriiiiiig = x + 2 + 9 + 11 + 19;
-write y;
-y = 0;
-read o;
-write o;
+sebas = 10; -Comentario
+desiree = 50;
+read w;
+write w;
+-kkjfelvbqebf
 end;

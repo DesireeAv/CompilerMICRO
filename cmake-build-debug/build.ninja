@@ -49,8 +49,8 @@ cmake_ninja_workdir = /home/desiree/Documents/TEC/compiladores/micro/cmake-build
 
 build cmake_object_order_depends_target_micro: phony || .
 
-build CMakeFiles/micro.dir/main.c.o: C_COMPILER__micro_unscanned_Debug /home/desiree/Documents/TEC/compiladores/micro/main.c || cmake_object_order_depends_target_micro
-  DEP_FILE = CMakeFiles/micro.dir/main.c.o.d
+build CMakeFiles/micro.dir/test_abrir_asm.c.o: C_COMPILER__micro_unscanned_Debug /home/desiree/Documents/TEC/compiladores/micro/test_abrir_asm.c || cmake_object_order_depends_target_micro
+  DEP_FILE = CMakeFiles/micro.dir/test_abrir_asm.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/micro.dir
   OBJECT_FILE_DIR = CMakeFiles/micro.dir
@@ -63,7 +63,7 @@ build CMakeFiles/micro.dir/main.c.o: C_COMPILER__micro_unscanned_Debug /home/des
 #############################################
 # Link the executable micro
 
-build micro: C_EXECUTABLE_LINKER__micro_Debug CMakeFiles/micro.dir/main.c.o
+build micro: C_EXECUTABLE_LINKER__micro_Debug CMakeFiles/micro.dir/test_abrir_asm.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/micro.dir
   POST_BUILD = :
