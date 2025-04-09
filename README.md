@@ -2,12 +2,12 @@
 ---
 ## Especificaciones del lenguaje a compilar:
 
-- El único tipo de variables que existen son números positivos y el cero.
+- El único tipo de variables que existen son de tipo `unsigned int` (ya que no se permiten restas).
 - Las operaciones que se pueden realizar son:
   - Suma con `+`
   - Asignaciones con `=`
-  - Operaciones de entrada y salida 
-    - Comentarios con `-`                                                                                                                                                                                                                                                                                                                                                                                         
+  - Operaciones de entrada y salida
+  - Comentarios con `-`
 - Palabras reservadas:
   - `read`
   - `write`
@@ -16,6 +16,20 @@
 - Las asignaciones son implícitas, ya que solamente existe un tipo de dato.
 
 ## Especificaciones del compilador:
-- Utiliza la estructura de datos trie para almacenar las variables (falta de implementar)
-- Maneja errores 
-  - En las asignaciones no se pueden hacer variables nuev                                                                                                                                                                                                                             as 
+- Lee en la línea de comando el nombre del archivo con extensión `.mic`, para simular el nuevo lenguaje *Micro*.
+- Utiliza la estructura de datos trie para almacenar las variables 
+- Maneja errores como:
+  - En las asignaciones no se pueden hacer variables nuevas, solo anteriormente declaradas
+  - Verificar que todas las instrucciones son válidas.
+  - Los relacionados con asignar memoria, por ejemplo, a la hora de crear el trie o de insertarle una nueva variable.
+  - Los relacionados con abrir los archivos respectivos, por ejemplo, el archivo de input que tiene el lenguaje debe tener la extensión `.mic`.
+- Permite declarar una variable y hacer su asignación respectiva, y luego leerla en el input y hacerle los cambios necesarios cuantas veces se requiera, por ejemplo:
+   ```
+   begin;
+   variable = 9+8; - asignacion
+   write variable; - escribirla en terminal
+   read variable; - pedir su nuevo valor en el input y hacerle esa asignacion nueva
+   write variable; - escribirla en terminal
+   variable = variable + variable; - nueva asignacion
+   end;
+   ``` 

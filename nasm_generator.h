@@ -40,9 +40,9 @@ void assignment_bss_nasm(FILE *file, const char *variable_name) {
 void read_nasm(FILE *file, const char *variable_name) {
     fprintf(file,
     "    ; Leer\n"
-    "    mov eax, 4\n"
-    "    mov ebx, 1     ; le quite lo de hacer el prompt\n"
-    "    int 0x80\n"
+    ";    mov eax, 4 ; ESTO SE QUITA PORQUE NO VA AL CASO, SOLO IMPRIME BASURA\n"
+    ";    mov ebx, 1     ; le quite lo de hacer el prompt\n"
+    ";    int 0x80\n"
     "    call read_input\n"
     "    mov [%s], eax\n\n", variable_name);
 }

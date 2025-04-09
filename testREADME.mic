@@ -1,0 +1,8 @@
+begin;
+variable = 9+8; - asignación
+write variable; - escribirla en terminal
+read variable; - pedir su nuevo valor en el input y hacerle esa asignacion nueva
+variable = variable + variable +124134; - nueva asignacion
+write variable; - escribirla en terminal
+
+end;
