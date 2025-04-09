@@ -1,6 +1,14 @@
 begin;
 read o;
 xyz = 10 + 5;
+rrrrrrr = 09;
+- COMENTARIOOOOOOOOOO LOLOL
+write rrrrrrr;
+read rrrrrrr;
+write rrrrrrr;
+- somos demasiado gatos creamos un compilador completo
+fofo = 0+5+rrrrrrr+7+1;
+write fofo;
 write xyz;
 m = 10 +xyz;-cherry
 m = m + m+ m+ m;

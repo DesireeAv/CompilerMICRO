@@ -134,10 +134,8 @@ struct trie {
     }
 }
 
-void assignment_bss_nasm(FILE *file, const char *variable_name) {
-     fprintf(file,"    %s resb 10\n",variable_name);
- }
 
+/*
 void trie_bss(struct trie *variableTrie, char prefix[], unsigned prefix_len, FILE *file) {
      if (variableTrie->end_of_word) {
          prefix[prefix_len] = '\0'; // para que sea string válida
@@ -152,19 +150,5 @@ void trie_bss(struct trie *variableTrie, char prefix[], unsigned prefix_len, FIL
          prefix[prefix_len] = i + 'a';
          trie_bss(variableTrie->children[i], prefix, prefix_len + 1, file);
      }
- }
-//  TODO: HACER EL SEGMENT .BSS EN LUGAR DEL SEGMENT .BSS (POR ALGUNA RAZON EL OTRO NO FUNCIONA BIEN)
-/*
-void generate_nasm_code(struct trie *variableTrie) {
-     FILE *file = fopen("test.asm", "w");
-     if (!file) {
-         perror("Error al crear el archivo");
-         exit(EXIT_FAILURE);
-     }
-     fprintf(file,
-             "section .bss\n");
-     char prefix[128];
-     trie_bss(variableTrie, prefix, 0, file);
-     fclose(file);
-     printf("Archivo test.asm generado con éxito.\n");
  }*/
+//  TODO: HACER EL SEGMENT .BSS EN LUGAR DEL SEGMENT .BSS (POR ALGUNA RAZON EL OTRO NO FUNCIONA BIEN)

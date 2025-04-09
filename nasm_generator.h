@@ -28,7 +28,12 @@ void begin_nasm(FILE *file) {
             "section .data\n"
             "    prompt db \"Enter variable: \", 0\n"
             "    len equ $ - prompt\n"
-            "    buffer times 20 db 0\n");
+            "    buffer times 20 db 0\n\n"
+            "segment .bss                   ; donde vamos a declarar todas las variables\n");
+}
+
+void assignment_bss_nasm(FILE *file, const char *variable_name) {
+    fprintf(file,"    %s resd 1\n",variable_name);
 }
 
 /* Esta función escribe en otro archivo el código de NASM para leer un número (variable) desde la terminal */
@@ -36,18 +41,16 @@ void read_nasm(FILE *file, const char *variable_name) {
     fprintf(file,
     "    ; Leer\n"
     "    mov eax, 4\n"
-    "    mov ebx, 1\n"
-    "    mov ecx, prompt\n"
-    "    mov edx, len\n"
+    "    mov ebx, 1     ; le quite lo de hacer el prompt\n"
     "    int 0x80\n"
     "    call read_input\n"
-    "    mov [%s], eax\n", variable_name);
+    "    mov [%s], eax\n\n", variable_name);
 }
 
 void functions_nasm(FILE *file) {
     fprintf(file,
         "section .text\n"
-        "    global _start\n"
+        "    global _start\n\n"
 
         "read_input:\n"
         "; Leer entrada\n"
@@ -59,11 +62,11 @@ void functions_nasm(FILE *file) {
 
         "    ; Convertir a entero\n"
         "    call convert_string_to_int\n"
-        "    ret\n"
+        "    ret\n\n"
 
         "convert_string_to_int:\n"
         "    xor eax, eax\n"
-        "    xor ecx, ecx\n"
+        "    xor ecx, ecx\n\n"
 
         "convert_loop:\n"
         "    mov dl, [buffer + ecx]\n"
@@ -74,10 +77,10 @@ void functions_nasm(FILE *file) {
         "    imul eax, 10\n"
         "    add eax, edx\n"
         "    inc ecx\n"
-        "    jmp convert_loop\n"
+        "    jmp convert_loop\n\n"
 
         "convert_done:\n"
-        "    ret\n"
+        "    ret\n\n"
 
         "_start:\n");
 }

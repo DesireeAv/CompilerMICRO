@@ -5,8 +5,8 @@
 #include <ctype.h>
 
 #include "main.h"
-struct trie * rootTrie = NULL;
-struct trie * trieTail = NULL;
+struct trie *rootTrie = NULL;
+struct trie *trieTail = NULL;
 
 #include "nasm_generator.h"
 
@@ -15,7 +15,6 @@ struct trie * trieTail = NULL;
 #define MAX_TOKENS 100
 
 
-int SECOND_TIME = 0;
 // Definición de los tipos de tokens
 enum TokenType {
     T_BEGIN, T_END, T_READ, T_WRITE, T_IDENTIFIER, T_INTEGER, T_ASSIGN, T_SEMICOLON, T_PLUS, T_MINUS, T_UNKNOWN
@@ -57,7 +56,7 @@ void skip_comment() {
 void skip_whitespace() {
     while (isspace(current_char()) || current_char() == '-') {
         if (current_char() == '-') {
-            skip_comment();  // Ignorar el comentario completo
+            skip_comment(); // Ignorar el comentario completo
         } else {
             next_char();
         }
@@ -114,12 +113,19 @@ struct Token next_token() {
     else if (isdigit(c)) {
         token = scan_integer();
         //if (token < 0) error("No se permiten restas ni números negativos.");
-    }
-    else if (c == '=') { token.type = T_ASSIGN; strcpy(token.value, "="); next_char(); }
-    else if (c == ';') { token.type = T_SEMICOLON; strcpy(token.value, ";"); next_char(); }
-    else if (c == '+') { token.type = T_PLUS; strcpy(token.value, "+"); next_char(); }
-    else if (c == '-') { skip_comment(); }
-    else { next_char(); }
+    } else if (c == '=') {
+        token.type = T_ASSIGN;
+        strcpy(token.value, "=");
+        next_char();
+    } else if (c == ';') {
+        token.type = T_SEMICOLON;
+        strcpy(token.value, ";");
+        next_char();
+    } else if (c == '+') {
+        token.type = T_PLUS;
+        strcpy(token.value, "+");
+        next_char();
+    } else if (c == '-') { skip_comment(); } else { next_char(); }
 
     //printf("Token leído: Tipo=%d, Valor='%s'\n", token.type, token.value); // Debug
     return token;
@@ -127,6 +133,7 @@ struct Token next_token() {
 
 // Variables para el análisis sintáctico
 struct Token current_token;
+
 void next_token_from_scanner() {
     current_token = next_token();
 }
@@ -151,18 +158,17 @@ void evaluate_expression() {
     }
 
     // Evaluar el resto de la expresión
-    while (current_token.type == T_PLUS || current_token.type == T_MINUS) {
+    while (current_token.type == T_PLUS ) { // le quité el || current_token.type == T_MINUS que estaba dentro del while
         char op = current_token.value[0];
         next_token_from_scanner(); // Avanzar al siguiente token
         if (current_token.type == T_INTEGER) {
-            // Usar strtol para convertir la cadena a un número entero
             suma_entero_nasm(textFile, current_token.value);
             next_token_from_scanner(); // Avanzar al siguiente token
         } else if (current_token.type == T_IDENTIFIER) {
             char identifier[MAX_TOKEN_LENGTH];
             strcpy(identifier, current_token.value);
             if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-                    error("Variable no declarada previamente;");
+                error("Variable no declarada previamente;");
             }
             suma_variable_nasm(textFile, current_token.value);
             next_token_from_scanner(); // Avanzar al siguiente token
@@ -179,13 +185,15 @@ void parse_assign() {
     char identifier[MAX_TOKEN_LENGTH];
     strcpy(identifier, current_token.value);
 
-    if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
-        int temp = 0;
-        temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
+    if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) { // o sea, si no encuentra la variable
+        int temp = trie_insert(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
         if (temp == -1) {
-            error("Could not insert variable into trie");
+            error("No se pudo insertar el valor en el trie.");
         }
-        // Se debe escribir la variable en el .bss
+        // else // Se debe escribir la variable en el .bss
+        else {
+            assignment_bss_nasm(bssFile, identifier); // lo escribe en el output.asm
+        }
     }
     next_token_from_scanner();
 
@@ -207,7 +215,7 @@ void parse_io_operation() {
 
     char operation[MAX_TOKEN_LENGTH];
     strcpy(operation, current_token.value);
-    next_token_from_scanner();  // Avanzamos al siguiente token
+    next_token_from_scanner(); // Avanzamos al siguiente token
 
     if (current_token.type != T_IDENTIFIER) {
         error("Se esperaba un identificador después de 'read' o 'write'.");
@@ -215,18 +223,22 @@ void parse_io_operation() {
 
     char identifier[MAX_TOKEN_LENGTH];
     strcpy(identifier, current_token.value);
-    next_token_from_scanner();  // Avanzamos al siguiente token
+    next_token_from_scanner(); // Avanzamos al siguiente token
 
     // Si la operación es "read", pedimos al usuario que ingrese un valor
     if (strcmp(operation, "read") == 0) {
         if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
             int temp = 0;
-            temp = trie_insert (rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
+            temp = trie_insert(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH));
             if (temp == -1) {
-                error("Could not insert variable into trie");
+                error("No se pudo insertar la variable en el trie.");
             }
+            // iba aquí
+            assignment_bss_nasm(bssFile, identifier);
+
         }
-        read_nasm(textFile, identifier);
+        read_nasm(textFile, identifier);// va as[i no? si no esta lo asigna en el .bss y despues lo lee independientemente si esta o no
+        // si, correcto
     }
     // Si la operación es "write", imprimimos el valor de la variable
     else if (strcmp(operation, "write") == 0) {
@@ -241,9 +253,8 @@ void parse_io_operation() {
     if (current_token.type != T_SEMICOLON) {
         error("Se esperaba ';' después de la operación.");
     }
-    next_token_from_scanner();  // Avanzamos al siguiente token (punto y coma)
+    next_token_from_scanner(); // Avanzamos al siguiente token (punto y coma)
 }
-
 
 void parse_statement() {
     if (current_token.type == T_IDENTIFIER) parse_assign();
@@ -270,6 +281,8 @@ void parse_program() {
 
     if (current_token.type != T_END) error("Se esperaba 'end'.");
     next_token_from_scanner();
+    // xd
+    // suave solo que no va a qui, va en el main
 }
 
 // Función principal
@@ -279,20 +292,21 @@ int main(const int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    bssFile = fopen("output.bss", "w");
+    bssFile = fopen("output.asm", "w"); // TODO: IMPORTANTE, YA NO SE LLAMA OUTPUT.BSS AHORA ES OUTPUT.ASM
     textFile = fopen("output.text", "w");
 
+    //todo: aqui se debe escribir lo de las funciones en el output.bss y lo de segment .bss
+    begin_nasm(bssFile); // se inicia el codigo en el archivo final
+    functions_nasm(textFile); // se inicia el archivo temporal
+
     FILE *input = fopen(argv[1], "r");
-    if (!input) {
-        perror("Error al abrir el archivo");
-        return EXIT_FAILURE;
-    }
+    if (!input) error("Error al abrir el archivo.");
+
 
     int ret = 0;
     ret = trie_new(&rootTrie);
-    if (-1 == ret) {
-        error( "Could not create trie");
-    }
+    if (-1 == ret) error("No se pudo crear el trie.");
+
 
     fseek(input, 0, SEEK_END);
     long length = ftell(input);
@@ -300,7 +314,7 @@ int main(const int argc, char **argv) {
 
     source_code = malloc(length + 1);
     if (!source_code) {
-        perror("Error de memoria");
+        perror("Error de memoria.");
         fclose(input);
         return EXIT_FAILURE;
     }
@@ -311,39 +325,51 @@ int main(const int argc, char **argv) {
     next_token_from_scanner();
     parse_program();
 
+    end_nasm(textFile); // MAEEEEEE OMG ERA ESO JAJAJA NO LO PUSIMOS
+
+    fclose(textFile); // Flushes and closes output.text
+
+    textFile = fopen("output.text", "r");
+    if (textFile == NULL) {
+        perror("Error opening output.text for reading");
+        // Handle the error appropriately
+    }
+    char line[256];
+    while (fgets(line, sizeof(line), textFile)) {
+        fputs(line, bssFile);
+    }
+
+    fclose(textFile);
+    fclose(bssFile);
     free(source_code);
 
-    //Todo lo que sigue se debe borrar
-/*
-    SECOND_TIME = 1; // PARA QUE EL PROGRAMA SEPA QUE YA SE TIENEN QUE ESCRIBIR LAS FUNCIONES Y NO SOLO LEER LAS VARIABLES
-    printf("SECOND TIME\n");
-    pos = 0;
-
-    // Segunda lectura
-    input = fopen(argv[1], "r");
-    if (!input) {
-        perror("Error al volver a abrir el archivo");
-        return EXIT_FAILURE;
+    //Todo: lo que sigue es borrar el archivo output.text
+    if (remove("output.text") != 0) {
+        error("No se eliminó el archivo temporal.");
     }
 
-    fseek(input, 0, SEEK_END);
-    length = ftell(input);
-    fseek(input, 0, SEEK_SET);
+    // todo: y lo último, despues de que se borra el output.text se ejecuta el output.asm por medio de los comandos del archivo test_abrir_asm.c
 
-    source_code = malloc(length + 1);
-    if (!source_code) {
-        perror("Error de memoria en segunda lectura");
-        fclose(input);
-        return EXIT_FAILURE;
+    // Aqui se abre y se ejecuta el output.asm:
+    // Compilarlo
+        if(system("nasm -f elf32 output.asm -o output.o") != 0) {
+            perror("Error en ensamblar el archivo de codigo nasm.");
+            return 1;
+        }
+
+    // Enlazarlo
+    if(system("ld -m elf_i386 output.o -o output") != 0) { //QUé hace? o qué estamos haciendo? lo unico que faltaba era lo de borrar el textFile
+        perror("Error al enlazar el archivo de codigo nasm."); // Diay probemos a ver si sirve ese remove ok ok deme dos segundos
+        return 1;
     }
 
-    fread(source_code, 1, length, input);
-    source_code[length] = '\0';
-    fclose(input);
-
-    next_token_from_scanner();
-    parse_program();
-
-    free(source_code);*/
+    // Ejecutarlo
+    if(system("./output") != 0) {
+        perror("Error al ejecutar el archivo de codigo nasm.");
+        return 1;
+    }
+    // okay ya voy a probarlo, que nervios omg
+    // dele
+    // dio error el remove vea telegram
     return EXIT_SUCCESS;
 }
