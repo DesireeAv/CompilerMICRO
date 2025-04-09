@@ -55,3 +55,7 @@
        ``` 
        make
        ```
+    5. Se ejecuta con esto (se sigue estando dentro del directorio de compilación):
+       ``` 
+       ./micro
+       ```
