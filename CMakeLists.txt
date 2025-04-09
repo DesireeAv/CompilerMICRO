@@ -6,5 +6,6 @@ set(CMAKE_C_STANDARD 11)
 add_executable(micro
         main.c
         main.h
+        nasm_generator.h
         #test_abrir_asm.c
 )

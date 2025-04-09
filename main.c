@@ -8,9 +8,13 @@
 struct trie * rootTrie = NULL;
 struct trie * trieTail = NULL;
 
+#include "nasm_generator.h"
+
 #define MAX_TOKEN_LENGTH 32
 #define MAX_LINE 256
 #define MAX_TOKENS 100
+
+
 int SECOND_TIME = 0;
 // Definición de los tipos de tokens
 enum TokenType {
@@ -21,6 +25,10 @@ struct Token {
     enum TokenType type;
     char value[MAX_TOKEN_LENGTH];
 };
+
+FILE *bssFile;
+FILE *textFile;
+
 
 // Código fuente y posición de lectura
 char *source_code;
@@ -127,7 +135,7 @@ void next_token_from_scanner() {
 // Función para evaluar expresiones aritméticas
 void evaluate_expression() {
     if (current_token.type == T_INTEGER) {
-        suma_entero_nasm(current_token.value);
+        suma_entero_nasm(textFile, current_token.value);
         next_token_from_scanner(); // Avanzar al siguiente token
     } else if (current_token.type == T_IDENTIFIER) {
         // Acceder a la variable y asignar el valor
@@ -136,7 +144,7 @@ void evaluate_expression() {
         if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
             error("Variable no declarada previamente;");
         }
-        suma_variable_nasm(current_token.value);
+        suma_variable_nasm(textFile, current_token.value);
         next_token_from_scanner(); // Avanzar al siguiente token
     } else {
         error("Se esperaba un número entero o un identificador.");
@@ -148,7 +156,7 @@ void evaluate_expression() {
         next_token_from_scanner(); // Avanzar al siguiente token
         if (current_token.type == T_INTEGER) {
             // Usar strtol para convertir la cadena a un número entero
-            suma_entero_nasm(current_token.value);
+            suma_entero_nasm(textFile, current_token.value);
             next_token_from_scanner(); // Avanzar al siguiente token
         } else if (current_token.type == T_IDENTIFIER) {
             char identifier[MAX_TOKEN_LENGTH];
@@ -156,7 +164,7 @@ void evaluate_expression() {
             if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
                     error("Variable no declarada previamente;");
             }
-            suma_variable_nasm(current_token.value);
+            suma_variable_nasm(textFile, current_token.value);
             next_token_from_scanner(); // Avanzar al siguiente token
         } else {
             error("Se esperaba un número entero o un identificador.");
@@ -184,9 +192,9 @@ void parse_assign() {
     if (current_token.type != T_ASSIGN) error("Se esperaba '='.");
     next_token_from_scanner();
 
-    iniciar_asignacion_nasm();
+    iniciar_asignacion_nasm(textFile);
     evaluate_expression(); // Evaluar la expresión
-    terminar_asignacion_nasm(identifier);
+    terminar_asignacion_nasm(textFile, identifier);
 
     if (current_token.type != T_SEMICOLON) error("Se esperaba ';'.");
     next_token_from_scanner();
@@ -218,7 +226,7 @@ void parse_io_operation() {
                 error("Could not insert variable into trie");
             }
         }
-        read_nasm(identifier);
+        read_nasm(textFile, identifier);
     }
     // Si la operación es "write", imprimimos el valor de la variable
     else if (strcmp(operation, "write") == 0) {
@@ -226,7 +234,7 @@ void parse_io_operation() {
         if ((trie_search(rootTrie, identifier, strnlen(identifier, MAX_TOKEN_LENGTH), &trieTail)) == -1) {
             error("Variable no declarada previamente;");
         }
-        write_nasm(identifier);
+        write_nasm(textFile, identifier);
     }
 
     // Verificamos si el siguiente token es un punto y coma
@@ -271,6 +279,9 @@ int main(const int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    bssFile = fopen("output.bss", "w");
+    textFile = fopen("output.text", "w");
+
     FILE *input = fopen(argv[1], "r");
     if (!input) {
         perror("Error al abrir el archivo");
@@ -303,7 +314,7 @@ int main(const int argc, char **argv) {
     free(source_code);
 
     //Todo lo que sigue se debe borrar
-
+/*
     SECOND_TIME = 1; // PARA QUE EL PROGRAMA SEPA QUE YA SE TIENEN QUE ESCRIBIR LAS FUNCIONES Y NO SOLO LEER LAS VARIABLES
     printf("SECOND TIME\n");
     pos = 0;
@@ -333,6 +344,6 @@ int main(const int argc, char **argv) {
     next_token_from_scanner();
     parse_program();
 
-    free(source_code);
+    free(source_code);*/
     return EXIT_SUCCESS;
 }

@@ -89,7 +89,8 @@
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				1
+				1,
+				2
 			]
 		}
 	],
@@ -104,6 +105,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "main.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "nasm_generator.h",
 			"sourceGroupIndex" : 1
 		}
 	],

@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "main.h"
 
 int write_counter = 0;
 FILE * OUT_TEMP;
@@ -33,8 +32,8 @@ void begin_nasm(FILE *file) {
 }
 
 /* Esta función escribe en otro archivo el código de NASM para leer un número (variable) desde la terminal */
-void read_nasm(const char *variable_name) {
-    fprintf(OUT_TEMP,
+void read_nasm(FILE *file, const char *variable_name) {
+    fprintf(file,
     "    ; Leer\n"
     "    mov eax, 4\n"
     "    mov ebx, 1\n"
@@ -84,9 +83,9 @@ void functions_nasm(FILE *file) {
 }
 
 /* Esta función escribe en otro archivo el código de NASM para escribir el valor de la variable en la terminal */
-void write_nasm(const char *variable_name) {
+void write_nasm(FILE *file, const char *variable_name) {
   write_counter++;
-    fprintf(OUT_TEMP,
+    fprintf(file,
         "    ; Escribir la variable %s\n"
         "    mov eax, [%s]          ; Cargar valor\n"
         "    mov ecx, buffer        ; Puntero al buffer\n"
@@ -102,34 +101,34 @@ void write_nasm(const char *variable_name) {
         "    mov [ecx], dl\n"
         "    test eax, eax\n"
         "    jnz convert_loop_%d\n"
-        "    ; Añadir '\n' después del número\n"
+        "    ; Añadir salto de linea después del número\n"
         "    mov byte [esi], 10     ; <- Esi sigue siendo buffer+10\n"
         "    mov eax, 4             ; sys_write\n"
         "    mov ebx, 1             ; stdout\n"
         "    mov edx, esi            ; longitud máxima\n"
         "    sub edx, ecx           ; longitud = fin - inicio\n"
-        "    add edx, 1             ; incluir '\n'"
+        "    add edx, 1             ; incluir salto de linea \n"
         "    int 0x80\n",
-        variable_name, variable_name, write_counter, write_counter, write_counter
+        variable_name, variable_name, write_counter, write_counter
     );
 }
 
 
 // TODO: HACER EL OUT_TEMP GLOBAL QUE VA A SER EL ACHOVO QUE VAMOS A BORRAR el temporal duh
-void suma_variable_nasm(char * variable_name) {
-    fprintf(OUT_TEMP, "    mov eax, [%s]\n", variable_name);
+void suma_variable_nasm(FILE *file, char * variable_name) {
+    fprintf(file, "    add eax, [%s]\n", variable_name);
 }
 
-void suma_entero_nasm(char * variable_name) {
-    fprintf(OUT_TEMP, "    mov eax, %s\n", variable_name);
+void suma_entero_nasm(FILE *file, char * variable_name) {
+    fprintf(file, "    add eax, %s\n", variable_name);
 }
 
-void iniciar_asignacion_nasm() {
-    fprintf(OUT_TEMP, "    mov eax, 0\n");
+void iniciar_asignacion_nasm(FILE *file) {
+    fprintf(file, "    mov eax, 0\n");
 }
 
-void terminar_asignacion_nasm(char * variable_name) {
-    fprintf(OUT_TEMP, "    mov [%s], eax\n", variable_name);
+void terminar_asignacion_nasm(FILE *file, char * variable_name) {
+    fprintf(file, "    mov [%s], eax\n", variable_name);
 }
 
 // Genera una asignación NASM con suma de enteros y/o variables

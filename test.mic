@@ -1,7 +1,8 @@
 begin;
-sebas = 10; -Comentario
-desiree = 50;
-read w;
-write w;
--kkjfelvbqebf
+read o;
+xyz = 10 + 5;
+write xyz;
+m = 10 +xyz;-cherry
+m = m + m+ m+ m;
+write m;
 end;

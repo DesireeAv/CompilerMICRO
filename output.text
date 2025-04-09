@@ -1,0 +1,66 @@
+    ; Leer
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, prompt
+    mov edx, len
+    int 0x80
+    call read_input
+    mov [o], eax
+    mov eax, 0
+    add eax, 10
+    add eax, 5
+    mov [xyz], eax
+    ; Escribir la variable xyz
+    mov eax, [xyz]          ; Cargar valor
+    mov ecx, buffer        ; Puntero al buffer
+    add ecx, 10            ; Posicionarse al final del buffer
+    mov esi, ecx           ; Guardamos el puntero final en esi (para calcular longitud luego)
+convert_loop_1:
+    dec ecx
+    xor edx, edx
+    mov ebx, 10
+    div ebx
+    add dl, '0'
+    mov [ecx], dl
+    test eax, eax
+    jnz convert_loop_1
+    ; Añadir salto de linea después del número
+    mov byte [esi], 10     ; <- Esi sigue siendo buffer+10
+    mov eax, 4             ; sys_write
+    mov ebx, 1             ; stdout
+    mov edx, esi            ; longitud máxima
+    sub edx, ecx           ; longitud = fin - inicio
+    add edx, 1             ; incluir salto de linea 
+    int 0x80
+    mov eax, 0
+    add eax, 10
+    add eax, [xyz]
+    mov [m], eax
+    mov eax, 0
+    add eax, [m]
+    add eax, [m]
+    add eax, [m]
+    add eax, [m]
+    mov [m], eax
+    ; Escribir la variable m
+    mov eax, [m]          ; Cargar valor
+    mov ecx, buffer        ; Puntero al buffer
+    add ecx, 10            ; Posicionarse al final del buffer
+    mov esi, ecx           ; Guardamos el puntero final en esi (para calcular longitud luego)
+convert_loop_2:
+    dec ecx
+    xor edx, edx
+    mov ebx, 10
+    div ebx
+    add dl, '0'
+    mov [ecx], dl
+    test eax, eax
+    jnz convert_loop_2
+    ; Añadir salto de linea después del número
+    mov byte [esi], 10     ; <- Esi sigue siendo buffer+10
+    mov eax, 4             ; sys_write
+    mov ebx, 1             ; stdout
+    mov edx, esi            ; longitud máxima
+    sub edx, ecx           ; longitud = fin - inicio
+    add edx, 1             ; incluir salto de linea 
+    int 0x80
