@@ -178,7 +178,7 @@ void evaluate_expression() {
     }
 }
 
-// Análisis de asignaciones
+// análisis de asignaciones
 void parse_assign() {
     if (current_token.type != T_IDENTIFIER) error("Se esperaba un identificador.");
 
